@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 import {
   Link,
@@ -129,7 +129,7 @@ const productColumns: ColumnDef<Product>[] = [
     header: "nome",
   },
   {
-    accessorKey: "Price",
+    accessorKey: "price",
     header: "Prezzo",
     cell: ({ row }) => priceFormatter.format(row.original.price),
   },
