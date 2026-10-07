@@ -13,8 +13,10 @@ import {
 import {
   flexRender,
   getCoreRowModel,
+  getSortedRowModel,
   useReactTable,
   type ColumnDef,
+  type SortingState,
 } from "@tanstack/react-table"
 
 type Product = {
@@ -147,14 +149,14 @@ export default function App() {
   const search = searchParams.get("q") ?? "";
   const onlyActive = searchParams.get("active") === "true";
   const navigate = useNavigate();
+  const [sorting, setSorting] = useState<SortingState>([])
 
   function handleToggleActive(productId: string) {
-    setProducts(
-      (previousProducts) => previousProducts.map(
-        (product) => product.id === productId ?
-          { ...product, active: !product.active }
-          : product
-      )
+    setProducts((previousProducts) => previousProducts.map(
+      (product) => product.id === productId ?
+        { ...product, active: !product.active }
+        : product
+    )
     )
   }
 
@@ -175,21 +177,43 @@ export default function App() {
 
   const normalizedSearch = search.trim().toLowerCase();
 
-  const filteredProducts = products.filter(
-    (product) => {
+  // const filteredProducts = products.filter(
+  //   (product) => {
 
-      const matchesSearch = product.name.toLowerCase().includes(normalizedSearch)
+  //     const matchesSearch = product.name.toLowerCase().includes(normalizedSearch)
 
-      const matchesActive = !onlyActive || product.active
+  //     const matchesActive = !onlyActive || product.active
 
-      return matchesSearch && matchesActive
+  //     return matchesSearch && matchesActive
+  //   });
+
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      const matchesSearch = product
+        .name
+        .toLowerCase()
+        .includes(normalizedSearch);
+      const matchesActive = !onlyActive || product.active;
+
+      return matchesSearch && matchesActive;
     });
+  }, [products, normalizedSearch, onlyActive]);
 
   const table = useReactTable({
     data: filteredProducts,
     columns: productColumns,
+
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
+
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     getRowId: (product) => product.id,
+
+    enableMultiSort: false,
+    sortDescFirst: false,
   });
 
   useEffect(() => {
@@ -252,24 +276,85 @@ export default function App() {
 
       <table>
         <thead>
-          <tr>
-            <th scope="col">Codice</th>
-            <th scope="col">Nome</th>
-            <th scope="col">Prezzo</th>
-            <th scope="col">Stato</th>
-            <th scope="col">Azioni</th>
-          </tr>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <tr key={headerGroup.id}>
+              {headerGroup.headers.map((header) => {
+                const sortDirection = header.column.getIsSorted();
+
+                return (
+                  <th
+                    key={header.id}
+                    scope="col"
+                    aria-sort={
+                      sortDirection === "asc"
+                        ? "ascending"
+                        : sortDirection === "desc"
+                          ? "descending"
+                          : undefined
+                    }
+                  >
+                    {header.isPlaceholder ? null : (
+                      <button
+                        type="button"
+                        disabled={!header.column.getCanSort()}
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+
+                        {sortDirection === "asc" && " ↑"}
+                        {sortDirection === "desc" && " ↓"}
+                      </button>
+                    )}
+                  </th>
+                );
+              })}
+
+              <th scope="col">Azioni</th>
+            </tr>
+          ))}
         </thead>
 
         <tbody>
-          {filteredProducts.map((product) => (
-            <ProductRow
-              key={product.id}
-              product={product}
-              onOpen={handleOpen}
-              onToggleActive={handleToggleActive}
-            />
+          {table.getRowModel().rows.map((row) => (
+            <tr key={row.id}>
+              {row.getVisibleCells().map((cell) => (
+                <td key={cell.id}>
+                  {flexRender(
+                    cell.column.columnDef.cell,
+                    cell.getContext(),
+                  )}
+                </td>
+              ))}
+
+              <td>
+                <button
+                  type="button"
+                  onClick={() => handleToggleActive(row.original.id)}
+                >
+                  {row.original.active ? "Disattiva" : "Attiva"}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={!row.original.active}
+                  onClick={() => handleOpen(row.original.id)}
+                >
+                  Apri
+                </button>
+              </td>
+            </tr>
           ))}
+
+          {table.getRowModel().rows.length === 0 && (
+            <tr>
+              <td colSpan={table.getVisibleLeafColumns().length + 1}>
+                Nessun prodotto trovato
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </main>
