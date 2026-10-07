@@ -83,6 +83,7 @@ function ProductDetail({ products }: { products: Product[] }) {
     return (
       <main>
         <h1>Prodotto non trovato!</h1>
+        <Link to={backToList}>Torna ai prodotti</Link>
       </main>
     );
   }
@@ -160,16 +161,6 @@ export default function App() {
   ).length
 
   const normalizedSearch = search.trim().toLowerCase();
-
-  // const filteredProducts = products.filter(
-  //   (product) => {
-
-  //     const matchesSearch = product.name.toLowerCase().includes(normalizedSearch)
-
-  //     const matchesActive = !onlyActive || product.active
-
-  //     return matchesSearch && matchesActive
-  //   });
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
