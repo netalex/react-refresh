@@ -19,6 +19,7 @@ import {
   type SortingState,
   getPaginationRowModel,
   type PaginationState,
+  type VisibilityState,
 } from "@tanstack/react-table"
 
 type Product = {
@@ -127,6 +128,7 @@ const productColumns: ColumnDef<Product>[] = [
   {
     accessorKey: "code",
     header: "Codice",
+    enableHiding: false,
   },
   {
     accessorKey: "name",
@@ -156,6 +158,7 @@ export default function App() {
     pageIndex: 0,
     pageSize: 2,
   });
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
 
   function handleToggleActive(productId: string) {
     setProducts((previousProducts) => previousProducts.map(
@@ -212,10 +215,12 @@ export default function App() {
     state: {
       sorting,
       pagination,
+      columnVisibility,
     },
 
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
+    onColumnVisibilityChange: setColumnVisibility,
 
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -285,6 +290,25 @@ export default function App() {
       </label>
 
       <p>  {filteredProducts.length} risultati su {products.length} prodotti</p>
+
+      <fieldset>
+        <legend>Colonne visibili</legend>
+
+        {table.getAllLeafColumns().map((column) => (
+          <label key={column.id} style={{ marginRight: 12 }}>
+            <input
+              type="checkbox"
+              checked={column.getIsVisible()}
+              disabled={!column.getCanHide()}
+              onChange={column.getToggleVisibilityHandler()}
+            />
+
+            {typeof column.columnDef.header === "string"
+              ? column.columnDef.header
+              : column.id}
+          </label>
+        ))}
+      </fieldset>
 
       <table>
         <thead>
