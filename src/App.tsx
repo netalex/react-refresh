@@ -66,31 +66,6 @@ const priceFormatter = new Intl.NumberFormat("it-IT", {
   currency: "EUR",
 });
 
-type ProductRowProps = {
-  product: Product;
-  onOpen: (productId: string) => void;
-  onToggleActive: (productId: string) => void;
-};
-
-function ProductRow({ product, onOpen, onToggleActive }: ProductRowProps) {
-  return (
-    <tr>
-      <td>{product.code}</td>
-      <td>{product.name}</td>
-      <td>{priceFormatter.format(product.price)}</td>
-      <td>{product.active ? "Attivo" : "Disattivato"}</td>
-      <td >
-        <button type="button" onClick={() => onToggleActive(product.id)}>
-          {product.active ? "Disattiva" : "Attiva"}
-        </button>
-        <button disabled={!product.active} type="button" onClick={() => onOpen(product.id)}>
-          Apri
-        </button>
-      </td>
-    </tr>
-  );
-}
-
 function ProductDetail({ products }: { products: Product[] }) {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
