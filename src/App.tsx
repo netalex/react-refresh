@@ -20,6 +20,7 @@ import {
   getPaginationRowModel,
   type PaginationState,
   type VisibilityState,
+  type RowSelectionState,
 } from "@tanstack/react-table"
 
 type Product = {
@@ -134,7 +135,8 @@ export default function App() {
     pageIndex: 0,
     pageSize: 2,
   });
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   function handleToggleActive(productId: string) {
     setProducts((previousProducts) => previousProducts.map(
@@ -182,11 +184,15 @@ export default function App() {
       sorting,
       pagination,
       columnVisibility,
+      rowSelection,
     },
 
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
     onColumnVisibilityChange: setColumnVisibility,
+
+    onRowSelectionChange: setRowSelection,
+    enableRowSelection: true,
 
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -230,6 +236,8 @@ export default function App() {
       return nextParams;
     }, { replace: true })
   }
+
+  const selectedCount = Object.values(rowSelection).filter(Boolean).length;
 
   const listPage = (
     <main>
@@ -276,10 +284,31 @@ export default function App() {
         ))}
       </fieldset>
 
+      <p>{selectedCount} prodotti selezionati</p>
+
+      <button
+        type="button"
+        disabled={selectedCount === 0}
+        onClick={() => setRowSelection({})}
+      >
+        Deseleziona tutti
+      </button>
+
       <table>
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
+              <th scope="col">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={table.getIsAllPageRowsSelected()}
+                    disabled={table.getRowModel().rows.length === 0}
+                    onChange={table.getToggleAllPageRowsSelectedHandler()}
+                  />
+                  Seleziona pagina
+                </label>
+              </th>
               {headerGroup.headers.map((header) => {
                 const sortDirection = header.column.getIsSorted();
 
@@ -322,6 +351,14 @@ export default function App() {
         <tbody>
           {table.getRowModel().rows.map((row) => (
             <tr key={row.id}>
+              <td>
+                <input
+                  type="checkbox"
+                  aria-label={`Seleziona ${row.original.name}`}
+                  checked={row.getIsSelected()}
+                  onChange={row.getToggleSelectedHandler()}
+                />
+              </td>
               {row.getVisibleCells().map((cell) => (
                 <td key={cell.id}>
                   {flexRender(
@@ -352,7 +389,7 @@ export default function App() {
 
           {table.getRowModel().rows.length === 0 && (
             <tr>
-              <td colSpan={table.getVisibleLeafColumns().length + 1}>
+              <td colSpan={table.getVisibleLeafColumns().length + 2}>
                 Nessun prodotto trovato
               </td>
             </tr>
