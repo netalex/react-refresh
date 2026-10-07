@@ -17,6 +17,8 @@ import {
   useReactTable,
   type ColumnDef,
   type SortingState,
+  getPaginationRowModel,
+  type PaginationState,
 } from "@tanstack/react-table"
 
 type Product = {
@@ -149,7 +151,11 @@ export default function App() {
   const search = searchParams.get("q") ?? "";
   const onlyActive = searchParams.get("active") === "true";
   const navigate = useNavigate();
-  const [sorting, setSorting] = useState<SortingState>([])
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 2,
+  });
 
   function handleToggleActive(productId: string) {
     setProducts((previousProducts) => previousProducts.map(
@@ -205,15 +211,21 @@ export default function App() {
 
     state: {
       sorting,
+      pagination,
     },
+
     onSortingChange: setSorting,
+    onPaginationChange: setPagination,
 
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+
     getRowId: (product) => product.id,
 
     enableMultiSort: false,
     sortDescFirst: false,
+    autoResetPageIndex: true,
   });
 
   useEffect(() => {
@@ -357,6 +369,48 @@ export default function App() {
           )}
         </tbody>
       </table>
+
+      <div>
+        <button
+          type="button"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          Precedente
+        </button>
+
+        <span>
+          {" "}
+          Pagina{" "}
+          {table.getPageCount() === 0 ? 0 : pagination.pageIndex + 1}
+          {" di "}
+          {table.getPageCount()}
+          {" "}
+        </span>
+
+        <button
+          type="button"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          Successiva
+        </button>
+
+        <label>
+          {" "}Righe per pagina{" "}
+          <select
+            value={pagination.pageSize}
+            onChange={(event) =>
+              table.setPageSize(Number(event.target.value))
+            }
+          >
+            <option value={2}>2</option>
+            <option value={4}>4</option>
+            <option value={10}>10</option>
+          </select>
+        </label>
+      </div>
+
     </main>
   )
 
