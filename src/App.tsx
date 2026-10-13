@@ -1,4 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
+// import { Button } from "@/components/ui/button";
+import { Button } from "./components/ui/button";
+
+
 
 import {
   Link,
@@ -22,6 +26,7 @@ import {
   type VisibilityState,
   type RowSelectionState,
 } from "@tanstack/react-table"
+
 
 type Product = {
   id: string;
@@ -286,13 +291,14 @@ export default function App() {
 
       <p>{selectedCount} prodotti selezionati</p>
 
-      <button
+      <Button
         type="button"
+        variant="outline"
         disabled={selectedCount === 0}
         onClick={() => setRowSelection({})}
       >
         Deseleziona tutti
-      </button>
+      </Button>
 
       <table>
         <thead>
